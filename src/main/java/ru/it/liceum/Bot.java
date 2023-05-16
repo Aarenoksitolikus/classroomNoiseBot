@@ -1,7 +1,7 @@
 package ru.it.liceum;
 
+import be.tarsos.dsp.io.TarsosDSPAudioInputStream;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -10,11 +10,11 @@ import org.telegram.telegrambots.meta.api.objects.Voice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.sound.sampled.*;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class Bot extends TelegramLongPollingBot {
 
@@ -71,9 +71,27 @@ public class Bot extends TelegramLongPollingBot {
             String filePath = execute(getFile).getFilePath();
             File file = new File("src\\main\\resources\\voice\\voice" + message.getFrom().getId() + ".wav");
             downloadFile(filePath, file);
-            double dbValue = getAverageDBValue(file);
+//            AudioInputStream in = AudioSystem.getAudioInputStream(new File(file.getPath()));
+            /*AudioFormat fromFormat = in.getFormat();
+            AudioFormat toFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                    fromFormat.getSampleRate(),
+                    16,
+                    fromFormat.getChannels(),
+                    fromFormat.getChannels() * 2,
+                    fromFormat.getSampleRate(),
+                    false);
+
+            AudioInputStream converted = AudioSystem.getAudioInputStream(toFormat, in);
+
+            File out = new File("track.wav");
+            AudioSystem.write(converted, AudioFileFormat.Type.WAVE, out);
+
+            in.close();
+            converted.close();*/
+            TarsosDSPAudioInputStream audioStream = new AudioInputStreamAdapter(audioInputStream);
+            double dbValue = Math.abs(20 * Math.log10(calculateRMS(Files.readAllBytes(file.toPath())) / 32768));
             sendText(message.getFrom().getId(), "Среднее значение громкости: " + dbValue + " децибел");
-        } catch (TelegramApiException | UnsupportedAudioFileException | IOException e) {
+        } catch (IOException | TelegramApiException e) {
             e.printStackTrace();
             // ignore
         }
