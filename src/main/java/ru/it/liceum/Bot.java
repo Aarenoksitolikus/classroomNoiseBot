@@ -42,28 +42,69 @@ public class Bot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (message.isCommand()) {
             switch (message.getText()) {
-                case "/check" -> checkNoiseLevelToChatRoom(message);
-                case "/music" -> playMusicToChatRoom(message);
-                case "/info" -> sendInfoToChatRoom(message);
-                case "/noise" -> sendText(message.getChatId(), "Пожалуйста, ведите себя потише!");
+                case "/info", "/info@ClassroomNoiseBot" -> getInfo(message);
+                case "/theory", "/theory@ClassroomNoiseBot" -> getTheory(message);
+                case "/options", "/options@ClassroomNoiseBot" -> getCheckOptions(message);
+                case "/checkers", "/checkers@ClassroomNoiseBot" -> getCheckers(message);
+                case "/checker1", "/checker1@ClassroomNoiseBot" -> getFirstChecker(message);
+                case "/checker2", "/checker2@ClassroomNoiseBot" -> getSecondChecker(message);
+                case "/music", "/music@ClassroomNoiseBot" -> playMusicToChatRoom(message);
+                case "/noise", "/noise@ClassroomNoiseBot" ->
+                        sendText(message.getChatId(), "Пожалуйста, ведите себя потише!");
                 default -> sendText(message.getFrom().getId(), "Unavailable command");
             }
-        } else if (message.getChat().isUserChat()){
+        } else if (message.getChat().isUserChat()) {
             sendText(message.getFrom().getId(), "Для получения информации о боте введите команду /info");
         }
     }
 
-    private void sendInfoToChatRoom(Message message) {
-        sendText(message.getChatId(), """
-                Этот бот умеет отдавать ссылку на сайт, где можно проверить текущий уровень шума в помещении, а также ссылку на сайт с разнообразной фоновой расслабляющей музыкой.
-
-                Для получения ссылки на сайт с проверкой шума введите команду /check.
-
-                Для получения ссылки на сайт с фоновой музыкой, введите команду /music""");
+    private void getInfo(Message message) {
+        sendText(message.getChatId(), "Этот бот поможет вам быстро получить доступ " +
+                "к интернет-ресурсам по влиянию постороннего шума на организм и работоспособность, " +
+                "существующим методам борьбы с лишним шумом и способам измерения уровня шума в помещении, " +
+                "а также содержит ссылки на полезные для борьбы с шумом сайты");
     }
 
-    private void checkNoiseLevelToChatRoom(Message message) {
-        sendText(message.getChatId(), "Ссылка на сайт для проверки уровня громкости в помещении: https://youlean.co/online-loudness-meter/.\n\nЕсли шкала находится не в зеленой зоне, значит, в комнате слишком шумно.");
+    private void getTheory(Message message) {
+        sendText(message.getChatId(), """
+                Здесь вы можете найти ссылки на несколько сайтов, содержащих теоретическую информацию о том, как уровень шума влияет на человека.
+
+                https://web.snauka.ru/issues/2017/06/83679
+
+                https://eduherald.ru/ru/article/view?id=12026
+
+                http://ecologylib.ru/books/item/f00/s00/z0000044/st063.shtml""");
+    }
+
+    private void getCheckOptions(Message message) {
+        sendText(message.getChatId(), """
+                Здесь вы можете найти ссылки на несколько сайтов, содержащих информацию о современных способах борьбы с шумом.
+
+                https://www.protrud.com/обучение/учебный-курс/защита-от-повышенного-уровня-шума/
+
+                https://skomplekt.com/kak-snizit-shum-v-ofise/
+                
+                https://cge28.ru/noise/""");
+    }
+
+    private void getCheckers(Message message) {
+        sendText(message.getChatId(), """
+                Здесь вы можете найти ссылки на несколько сайтов, на которых можно найти информацию о способах изменения уровня шума в помещении, а также о калибровке измерительных приборов.
+
+                https://tion.ru/blog/uroven-shuma/
+
+                https://androidinsider.ru/polezno-znat/izmerit-shum-telefonom-vsyo-chto-nuzhno-znat-ob-etom.html#:~:text=Огромное%20количество%20пользователей%20Android%20знают,смартфон%20в%20сторону%20источника%20шума
+                
+                https://www.metronx.ru/articles/kalibrovka-shumomera/""");
+    }
+
+    private void getFirstChecker(Message message) {
+        sendText(message.getChatId(), "Ссылка на первый сайт для проверки уровня громкости в помещении: https://youlean.co/online-loudness-meter/.\n\nЕсли шкала находится не в зеленой зоне, значит, в комнате слишком шумно.");
+    }
+
+    private void getSecondChecker(Message message) {
+        sendText(message.getChatId(), "Ссылка на второй сайт для проверки уровня громкости в помещении: https://www.checkhearing.org/soundmeter.php.\n\nЕсли шкала находится выше голубой зоны, значит, в комнате слишком шумно.");
+
     }
 
     private void playMusicToChatRoom(Message message) {
