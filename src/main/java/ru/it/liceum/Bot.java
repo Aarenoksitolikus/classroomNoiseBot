@@ -22,7 +22,6 @@ public class Bot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         var msg = update.getMessage();
-        var user = msg.getFrom();
 
         checkIfMsgIsCommand(update);
     }
