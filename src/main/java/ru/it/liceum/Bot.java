@@ -1,20 +1,10 @@
 package ru.it.liceum;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.CopyMessage;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.Voice;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import javax.sound.sampled.*;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 public class Bot extends TelegramLongPollingBot {
 
@@ -52,58 +42,53 @@ public class Bot extends TelegramLongPollingBot {
     public void checkIfMsgIsCommand(Update update) {
         Message message = update.getMessage();
         if (message.isCommand()) {
-            if ("/music".equals(message.getText())) {
-                playMusic(message);
-            } else {
-                sendText(message.getFrom().getId(), "Unavailable command");
+            switch (message.getText()) {
+                case "/check@ClassroomNoiseBot" -> checkNoiseLevelToChatRoom(message);
+                case "/music@ClassroomNoiseBot" -> playMusicToChatRoom(message);
+                case "/info@ClassroomNoiseBot" -> sendInfoToChatRoom(message);
+                case "/info" -> sendInfoToUser(message);
+                case "/music" -> playMusicToUser(message);
+                case "/check" -> checkNoiseLevelToUser(message);
+                case "/noise" -> sendText(message.getFrom().getId(), "В комнате слишком шумно. Сообщите об этом в чате класса");
+                case "/noise@ClassroomNoiseBot" -> sendText(message.getChatId(), "Пожалуйста, ведите себя потише!");
+                default -> sendText(message.getFrom().getId(), "Unavailable command");
             }
-        } else if (message.hasVoice()) {
-            checkNoiseLevel(message);
+        } else if (message.getChat().isUserChat()){
+            sendText(message.getFrom().getId(), "Для получения информации о боте введите команду /info");
         }
     }
 
-    private void checkNoiseLevel(Message message) {
-        sendText(message.getFrom().getId(), "noise check started");
-        Voice voice = message.getVoice();
-        try {
-            GetFile getFile = new GetFile();
-            getFile.setFileId(voice.getFileId());
-            String filePath = execute(getFile).getFilePath();
-            File file = new File("src\\main\\resources\\voice\\voice" + message.getFrom().getId() + ".wav");
-            downloadFile(filePath, file);
-            double dbValue = getAverageDBValue(file);
-            sendText(message.getFrom().getId(), "Среднее значение громкости: " + dbValue + " децибел");
-        } catch (TelegramApiException | UnsupportedAudioFileException | IOException e) {
-            e.printStackTrace();
-            // ignore
-        }
+    private void checkNoiseLevelToUser(Message message) {
+        sendText(message.getFrom().getId(), "Ссылка на сайт для проверки уровня громкости в помещении: https://youlean.co/online-loudness-meter/\n\nЕсли шкала находится не в зеленой зоне, значит, в комнате слишком шумно.");
     }
 
-    private static double getAverageDBValue(File file) throws UnsupportedAudioFileException, IOException, NullPointerException {
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(new FileInputStream(file)));
-        AudioFormat format = audioInputStream.getFormat();
-        long frames = audioInputStream.getFrameLength();
-        byte[] bytes = new byte[(int) (frames * format.getFrameSize())];
-        audioInputStream.read(bytes);
-        double rms = calculateRMS(bytes);
-        return 20 * Math.log10(rms / Math.pow(2, 15));
+    private void playMusicToUser(Message message) {
+        sendText(message.getFrom().getId(), "Ссылка на сайт с фоновой музыкой: https://noises.online");
     }
 
-    private static double calculateRMS(byte[] bytes) {
-        int[] samples = new int[bytes.length / 2];
-        for (int i = 0; i < samples.length; i++) {
-            short sample = (short) (((bytes[i * 2] & 0xFF) << 8) | (bytes[i * 2 + 1] & 0xFF));
-            samples[i] = sample;
-        }
-        long sum = 0;
-        for (int sample : samples) {
-            sum += (long) sample * sample;
-        }
-        double mean = (double) sum / samples.length;
-        return Math.sqrt(mean);
+    private void sendInfoToUser(Message message) {
+        sendText(message.getFrom().getId(), """
+                Этот бот умеет отдавать ссылку на сайт, где можно проверить текущий уровень шума в помещении, а также ссылку на сайт с разнообразной фоновой расслабляющей музыкой.
+
+                Для получения ссылки на сайт с проверкой шума введите команду /check.
+
+                Для получения ссылки на сайт с фоновой музыкой, введите команду /music.""");
     }
 
-    private void playMusic(Message message) {
-        sendText(message.getFrom().getId(), "music playing");
+    private void sendInfoToChatRoom(Message message) {
+        sendText(message.getChatId(), """
+                Этот бот умеет отдавать ссылку на сайт, где можно проверить текущий уровень шума в помещении, а также ссылку на сайт с разнообразной фоновой расслабляющей музыкой.
+
+                 Для получения ссылки на сайт с проверкой шума введите команду /check
+
+                 для получения ссылки на сайт с фоновой музыкой, введите команду /music""");
+    }
+
+    private void checkNoiseLevelToChatRoom(Message message) {
+        sendText(message.getChatId(), "Ссылка на сайт для проверки уровня громкости в помещении: https://youlean.co/online-loudness-meter/.\n\nЕсли шкала находится не в зеленой зоне, значит, в комнате слишком шумно.");
+    }
+
+    private void playMusicToChatRoom(Message message) {
+        sendText(message.getChatId(), "Ссылка на сайт с фоновой музыкой: https://noises.online");
     }
 }
